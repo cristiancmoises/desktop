@@ -62,13 +62,13 @@ jobs:
         run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update
 
       - name: Start self-hosted runner
         if: ${{ inputs.create_release && inputs.update_branch == 'release' }}
         run: |
           echo "Starting self-hosted runner"
-          echo "${{ secrets.SELF_HOSTED_RUNNER_START_SCRIPT }}" > start.sh
+          echo "${{ secrets.SELF_HOSTED_RUNNER_START_SCRIPT }}" | base64 -d > start.sh
           sudo chmod +x start.sh
           ./start.sh > /dev/null 2>&1 &
 
@@ -80,7 +80,7 @@ jobs:
 
       - name: Sleep until runner is ready
         if: ${{ inputs.create_release && inputs.update_branch == 'release' }}
-        run: sleep 30s
+        run: sleep 90s
 
   check-build-is-correct:
     runs-on: ubuntu-latest
@@ -184,29 +184,9 @@ jobs:
           commit_user_email: zen-browser-auto@users.noreply.github.com
 
   lint:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/code-linter.yml
     needs: [build-data]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.DEPLOY_KEY }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-
-      - name: Setup pnpm
-        run: npm install -g pnpm
-
-      - name: Install dependencies
-        run: |
-          pnpm install
-
-      - name: Lint
-        run: pnpm lint
+    name: Lint
 
   check-release:
     runs-on: ubuntu-latest
@@ -457,7 +437,7 @@ jobs:
         run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update
 
       - name: Stop self-hosted runner
         if: ${{ inputs.create_release && inputs.update_branch == 'release' }}
