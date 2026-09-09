@@ -76,7 +76,6 @@ jobs:
           echo "update_branch: ${{ inputs.update_branch }}"
           echo "GITHUB_REPOSITORY: ${{ github.repository }}"
           echo "GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}"
-          echo "GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
 
       - name: Check if correct branch
         if: ${{ inputs.create_release }}
@@ -117,7 +116,7 @@ jobs:
           bash ./start.sh
 
       - name: Remove self-hosted runner script
-        if: always() && ${{ inputs.create_release && inputs.update_branch == 'release' }}
+        if: ${{ always() && inputs.create_release && inputs.update_branch == 'release' }}
         run: |
           echo "Removing self-hosted runner script"
           rm start.sh || true
@@ -462,7 +461,7 @@ jobs:
           bash ./stop.sh > /dev/null
 
       - name: Remove self-hosted runner script
-        if: always() && ${{ inputs.create_release && inputs.update_branch == 'release' }}
+        if: ${{ always() && inputs.create_release && inputs.update_branch == 'release' }}
         run: |
           echo "Removing self-hosted runner script"
           rm stop.sh || true
@@ -734,9 +733,6 @@ jobs:
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
-        env:
-          GIT_TRACE: 1
-          GIT_CURL_VERBOSE: 1
         with:
           token: ${{ secrets.DEPLOY_KEY }}
           commit-message: Update to version `${{ needs.build-data.outputs.version }}`
